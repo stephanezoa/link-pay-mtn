@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Facture - Global Bush</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in { animation: fadeIn 0.3s ease-out; }
+    .slide-up { animation: slideUp 0.4s ease-out; }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 9999;
+      backdrop-filter: blur(5px);
+    }
+    .modal.active { display: flex; }
+    .bg-pattern {
+      background-image: 
+        radial-gradient(circle at 20% 50%, rgba(16, 185, 129, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 50%);
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-green-50 min-h-screen bg-pattern">
+  <!-- Header -->
+  <div class="bg-white shadow-md border-b-4 border-green-500">
+    <div class="container mx-auto px-4 py-4">
+      <div class="flex items-center space-x-3">
+        <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center">
+          <i class="fas fa-globe-africa text-white text-xl"></i>
+        </div>
+        <div>
+          <h1 class="text-2xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
+            Global Bush
+          </h1>
+          <p class="text-xs text-gray-500">Voyagez sans frontières</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container mx-auto px-4 py-8 max-w-4xl">
+    <!-- Loader -->
+    <div id="loader" class="text-center py-20">
+      <i class="fas fa-spinner fa-spin text-5xl text-indigo-600 mb-4"></i>
+      <p class="text-gray-600">Chargement de la facture...</p>
+    </div>
+
+    <!-- Contenu -->
+    <div id="invoiceContent" class="hidden">
+      <!-- Facture -->
+      <div class="bg-white rounded-3xl shadow-2xl p-6 md:p-10 mb-6 slide-up border-t-4 border-green-500">
+        <div class="text-center mb-6">
+          <div class="inline-block w-16 h-16 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mb-4">
+            <i class="fas fa-file-invoice-dollar text-white text-2xl"></i>
+          </div>
+          <h1 class="text-4xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-2">
+            FACTURE
+          </h1>
+          <p class="text-gray-600">Global Bush Travel & Tourism</p>
+        </div>
+
+        <!-- Statut -->
+        <div id="statusBadge" class="text-center mb-6"></div>
+
+        <!-- Info client -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div class="bg-gradient-to-br from-green-50 to-blue-50 p-5 rounded-xl border-2 border-green-100">
+            <h3 class="font-bold text-gray-800 mb-3 flex items-center">
+              <i class="fas fa-user text-green-600 mr-2"></i>Informations client
+            </h3>
+            <p class="text-sm mb-2"><strong>Nom complet:</strong> <span id="clientName" class="text-gray-700"></span></p>
+            <p class="text-sm mb-2"><strong>Téléphone:</strong> <span id="clientPhone" class="text-gray-700"></span></p>
+            <p class="text-sm" id="clientEmailContainer"></p>
+          </div>
+
+          <div class="bg-gradient-to-br from-blue-50 to-purple-50 p-5 rounded-xl border-2 border-blue-100">
+            <h3 class="font-bold text-gray-800 mb-3 flex items-center">
+              <i class="fas fa-info-circle text-blue-600 mr-2"></i>Détails facture
+            </h3>
+            <p class="text-sm mb-2"><strong>Référence:</strong> <span id="reference" class="text-gray-700"></span></p>
+            <p class="text-sm mb-2"><strong>Date:</strong> <span id="date" class="text-gray-700"></span></p>
+            <p class="text-sm"><strong>ID:</strong> <span id="paymentId" class="text-xs font-mono text-gray-600"></span></p>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="bg-gradient-to-r from-indigo-50 to-purple-50 p-5 rounded-xl mb-6 border-2 border-indigo-100">
+          <h3 class="font-bold text-indigo-900 mb-2 flex items-center">
+            <i class="fas fa-align-left mr-2"></i>Description du service
+          </h3>
+          <p id="reason" class="text-gray-700"></p>
+        </div>
+
+        <!-- Montant -->
+        <div class="bg-gradient-to-r from-green-500 via-blue-600 to-purple-600 text-white p-8 rounded-2xl text-center shadow-xl">
+          <p class="text-lg mb-2 opacity-90">Montant à payer</p>
+          <p class="text-6xl font-bold mb-2" id="amount"></p>
+          <p class="text-2xl font-semibold">XAF</p>
+        </div>
+      </div>
+
+      <!-- Moyens de paiement -->
+      <div id="paymentMethods" class="bg-white rounded-3xl shadow-2xl p-6 md:p-10 slide-up">
+        <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center flex items-center justify-center">
+          <i class="fas fa-credit-card mr-3 text-green-600"></i>
+          Choisissez votre moyen de paiement
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- MTN MoMo -->
+          <button onclick="openPaymentModal('mtn')" 
+            class="group bg-gradient-to-br from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 rounded-2xl p-8 transform hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl border-4 border-yellow-300">
+            <div class="text-center">
+              <div class="text-7xl mb-4">📱</div>
+              <h3 class="text-3xl font-bold text-gray-900 mb-3">MTN MoMo</h3>
+              <p class="text-sm text-gray-800 mb-4">Paiement mobile sécurisé</p>
+              <div class="bg-white/60 rounded-xl py-3 px-4">
+                <p class="text-xs font-bold text-green-700">
+                  <i class="fas fa-shield-alt mr-1"></i>Système actif et sécurisé
+                </p>
+              </div>
+            </div>
+          </button>
+
+          <!-- Orange Money -->
+          <button onclick="openPaymentModal('orange')" 
+            class="group bg-gradient-to-br from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 rounded-2xl p-8 transform hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-2xl border-4 border-orange-400">
+            <div class="text-center">
+              <div class="text-7xl mb-4">🍊</div>
+              <h3 class="text-3xl font-bold text-white mb-3">Orange Money</h3>
+              <p class="text-sm text-orange-100 mb-4">Paiement mobile Orange</p>
+              <div class="bg-white/30 rounded-xl py-3 px-4">
+                <p class="text-xs font-bold text-white">
+                  <i class="fas fa-flask mr-1"></i>Mode simulation
+                </p>
+              </div>
+            </div>
+          </button>
+        </div>
+
+        <!-- Message -->
+        <div id="paymentMessage" class="hidden mt-8"></div>
+      </div>
+
+      <!-- Paiement complété -->
+      <div id="completedMessage" class="hidden bg-white rounded-3xl shadow-2xl p-10 text-center fade-in border-t-4 border-green-500">
+        <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <i class="fas fa-check-circle text-6xl text-green-600"></i>
+        </div>
+        <h2 class="text-4xl font-bold text-green-600 mb-4">Paiement effectué !</h2>
+        <p class="text-gray-600 text-lg mb-6">Cette facture a déjà été réglée.</p>
+        <div class="bg-green-50 p-6 rounded-xl border-2 border-green-200">
+          <p class="text-sm text-gray-700 mb-2">
+            <i class="fas fa-calendar-check text-green-600 mr-2"></i>
+            <strong>Date de paiement:</strong>
+          </p>
+          <p class="text-lg font-bold text-green-700" id="paidAt"></p>
+        </div>
+        <div class="mt-6">
+          <a href="/" class="inline-block px-8 py-4 bg-gradient-to-r from-green-600 to-blue-600 text-white font-bold rounded-xl hover:shadow-xl transition-all">
+            <i class="fas fa-home mr-2"></i>Retour à l'accueil
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de paiement -->
+  <div id="paymentModal" class="modal items-center justify-center">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full mx-4 p-8 fade-in">
+      <div class="text-center mb-6">
+        <div id="modalIcon" class="w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-4"></div>
+        <h3 id="modalTitle" class="text-2xl font-bold text-gray-800 mb-2"></h3>
+        <p class="text-gray-600" id="modalSubtitle"></p>
+      </div>
+
+      <form id="phoneForm" class="space-y-4">
+        <div>
+          <label class="block text-sm font-bold text-gray-700 mb-2">
+            <i class="fas fa-mobile-alt mr-2 text-blue-600"></i>
+            Numéro à débiter
+          </label>
+          <input type="tel" id="modalPhone" required pattern="237[0-9]{9}"
+            class="w-full px-4 py-4 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg font-semibold"
+            placeholder="237XXXXXXXXX">
+          <p class="text-xs text-gray-500 mt-2">
+            <i class="fas fa-info-circle mr-1"></i>
+            Format: 237XXXXXXXXX (12 chiffres)
+          </p>
+        </div>
+
+        <div class="bg-blue-50 p-4 rounded-xl border-2 border-blue-200">
+          <p class="text-sm text-gray-700 mb-1">Montant à payer:</p>
+          <p id="modalAmount" class="text-3xl font-bold text-blue-700"></p>
+        </div>
+
+        <div class="flex gap-3">
+          <button type="button" onclick="closeModal()" 
+            class="flex-1 px-6 py-4 bg-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-300 transition">
+            <i class="fas fa-times mr-2"></i>Annuler
+          </button>
+          <button type="submit" id="confirmBtn"
+            class="flex-1 px-6 py-4 bg-gradient-to-r from-green-500 to-blue-600 text-white font-bold rounded-xl hover:shadow-xl transition">
+            <i class="fas fa-check mr-2"></i>Confirmer
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const paymentId = window.location.pathname.split('/').pop();
+    let paymentData = null;
+    let checkInterval = null;
+    let selectedProvider = null;
+
+    loadInvoice();
+
+    async function loadInvoice() {
+      try {
+        const response = await fetch(`/api/payment/${paymentId}`);
+        paymentData = await response.json();
+
+        if (paymentData.error) {
+          document.getElementById('loader').innerHTML = 
+            '<div class="text-center"><i class="fas fa-exclamation-circle text-5xl text-red-500 mb-4"></i><p class="text-xl text-gray-600">Facture introuvable</p></div>';
+          return;
+        }
+
+        displayInvoice();
+      } catch (error) {
+        document.getElementById('loader').innerHTML = 
+          '<div class="text-center"><i class="fas fa-exclamation-circle text-5xl text-red-500 mb-4"></i><p class="text-xl text-gray-600">Erreur de chargement</p></div>';
+      }
+    }
+
+    function displayInvoice() {
+      document.getElementById('loader').classList.add('hidden');
+      document.getElementById('invoiceContent').classList.remove('hidden');
+
+      document.getElementById('clientName').textContent = `${paymentData.first_name} ${paymentData.last_name}`;
+      document.getElementById('clientPhone').textContent = paymentData.phone;
+      
+      if (paymentData.email) {
+        document.getElementById('clientEmailContainer').innerHTML = 
+          `<strong>Email:</strong> <span class="text-gray-700">${paymentData.email}</span>`;
+      }
+
+      document.getElementById('reference').textContent = paymentData.reference || 'N/A';
+      document.getElementById('date').textContent = new Date(paymentData.created_at).toLocaleDateString('fr-FR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+      document.getElementById('paymentId').textContent = paymentData.payment_id;
+      document.getElementById('reason').textContent = paymentData.reason || 'Paiement';
+      document.getElementById('amount').textContent = parseFloat(paymentData.amount).toLocaleString('fr-FR');
+
+      updateStatus(paymentData.status);
+
+      if (paymentData.status === 'completed') {
+        document.getElementById('paymentMethods').classList.add('hidden');
+        document.getElementById('completedMessage').classList.remove('hidden');
+        const paidDate = new Date(paymentData.paid_at);
+        document.getElementById('paidAt').textContent = paidDate.toLocaleDateString('fr-FR', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      }
+    }
+
+    function updateStatus(status) {
+      const badge = document.getElementById('statusBadge');
+      const badges = {
+        completed: '<span class="inline-block px-8 py-3 bg-green-100 text-green-800 rounded-full font-bold text-lg border-2 border-green-300"><i class="fas fa-check-circle mr-2"></i>Payé</span>',
+        pending: '<span class="inline-block px-8 py-3 bg-yellow-100 text-yellow-800 rounded-full font-bold text-lg border-2 border-yellow-300"><i class="fas fa-clock mr-2"></i>En attente</span>',
+        failed: '<span class="inline-block px-8 py-3 bg-red-100 text-red-800 rounded-full font-bold text-lg border-2 border-red-300"><i class="fas fa-times-circle mr-2"></i>Échoué</span>'
+      };
+      badge.innerHTML = badges[status] || badges.pending;
+    }
+
+    function openPaymentModal(provider) {
+      selectedProvider = provider;
+      const modal = document.getElementById('paymentModal');
+      const modalIcon = document.getElementById('modalIcon');
+      const modalTitle = document.getElementById('modalTitle');
+      const modalSubtitle = document.getElementById('modalSubtitle');
+      const modalAmount = document.getElementById('modalAmount');
+      const modalPhone = document.getElementById('modalPhone');
+
+      if (provider === 'mtn') {
+        modalIcon.className = 'w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-4 bg-yellow-400';
+        modalIcon.innerHTML = '<i class="fas fa-mobile-alt text-4xl text-white"></i>';
+        modalTitle.textContent = 'MTN Mobile Money';
+        modalSubtitle.textContent = 'Entrez le numéro à débiter';
+      } else {
+        modalIcon.className = 'w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-4 bg-orange-500';
+        modalIcon.innerHTML = '<i class="fas fa-mobile-alt text-4xl text-white"></i>';
+        modalTitle.textContent = 'Orange Money';
+        modalSubtitle.textContent = 'Entrez le numéro à débiter';
+      }
+
+      modalAmount.textContent = `${parseFloat(paymentData.amount).toLocaleString('fr-FR')} XAF`;
+      modalPhone.value = paymentData.phone;
+      modal.classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('paymentModal').classList.remove('active');
+    }
+
+    document.getElementById('phoneForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const phoneNumber = document.getElementById('modalPhone').value;
+      closeModal();
+      await initiatePayment(selectedProvider, phoneNumber);
+    });
+
+    async function initiatePayment(provider, phoneNumber) {
+      const messageDiv = document.getElementById('paymentMessage');
+      messageDiv.classList.remove('hidden');
+      messageDiv.className = 'mt-8 p-6 rounded-2xl bg-blue-50 border-2 border-blue-200 fade-in';
+      messageDiv.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin text-3xl text-blue-600 mb-3"></i><p class="text-lg font-semibold text-gray-700">Initiation du paiement...</p></div>';
+
+      try {
+        const response = await fetch('/api/initiate-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ paymentId, provider, phoneNumber })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          if (provider === 'mtn') {
+            messageDiv.className = 'mt-8 p-6 rounded-2xl bg-green-50 border-2 border-green-200 fade-in';
+            messageDiv.innerHTML = `
+              <div class="text-center">
+                <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i class="fas fa-check text-white text-2xl"></i>
+                </div>
+                <h3 class="font-bold text-2xl text-green-800 mb-3">Demande envoyée !</h3>
+                <p class="text-gray-700 mb-4">Vérifiez le <strong>${phoneNumber}</strong> et composez votre code PIN MTN MoMo</p>
+                <div class="bg-white p-4 rounded-xl border-2 border-green-200">
+                  <p class="text-xs text-gray-600 mb-2">Référence de transaction:</p>
+                  <p class="font-mono text-sm text-gray-800">${result.referenceId}</p>
+                </div>
+                <div class="mt-6">
+                  <i class="fas fa-spinner fa-spin text-3xl text-indigo-600"></i>
+                  <p class="text-sm text-gray-600 mt-3">Vérification du paiement en cours...</p>
+                </div>
+              </div>
+            `;
+            startPaymentCheck();
+          } else {
+            messageDiv.className = 'mt-8 p-6 rounded-2xl bg-orange-50 border-2 border-orange-200 fade-in';
+            messageDiv.innerHTML = `
+              <div class="text-center">
+                <i class="fas fa-info-circle text-4xl text-orange-600 mb-4"></i>
+                <h3 class="font-bold text-xl text-orange-800 mb-2">Mode Simulation</h3>
+                <p class="text-gray-700">Orange Money en simulation. Utilisez MTN MoMo pour un paiement réel.</p>
+              </div>
+            `;
+          }
+        } else {
+          if (result.paid_at) {
+            messageDiv.className = 'mt-8 p-6 rounded-2xl bg-green-50 border-2 border-green-200 fade-in';
+            messageDiv.innerHTML = `
+              <div class="text-center">
+                <i class="fas fa-check-circle text-5xl text-green-600 mb-4"></i>
+                <h3 class="font-bold text-2xl text-green-800 mb-2">Déjà payé</h3>
+                <p class="text-gray-700 mb-4">Cette facture a été réglée le:</p>
+                <p class="text-lg font-bold text-green-700">${new Date(result.paid_at).toLocaleDateString('fr-FR', {
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}</p>
+              </div>
+            `;
+            setTimeout(() => location.reload(), 3000);
+          } else {
+            messageDiv.className = 'mt-8 p-6 rounded-2xl bg-red-50 border-2 border-red-200 fade-in';
+            messageDiv.innerHTML = `
+              <div class="text-center">
+                <i class="fas fa-exclamation-triangle text-4xl text-red-600 mb-3"></i>
+                <p class="text-red-800 font-semibold">${result.error || 'Erreur inconnue'}</p>
+              </div>
+            `;
+          }
+        }
+      } catch (error) {
+        messageDiv.className = 'mt-8 p-6 rounded-2xl bg-red-50 border-2 border-red-200 fade-in';
+        messageDiv.innerHTML = '<div class="text-center"><i class="fas fa-exclamation-triangle text-4xl text-red-600 mb-3"></i><p class="text-red-800 font-semibold">Erreur de connexion</p></div>';
+      }
+    }
+
+    function startPaymentCheck() {
+      if (checkInterval) clearInterval(checkInterval);
+      
+      checkInterval = setInterval(async () => {
+        try {
+          const response = await fetch(`/api/check-status/${paymentId}`);
+          const result = await response.json();
+
+          if (result.status === 'completed') {
+            clearInterval(checkInterval);
+            
+            const messageDiv = document.getElementById('paymentMessage');
+            messageDiv.className = 'mt-8 p-6 rounded-2xl bg-green-50 border-2 border-green-200 fade-in';
+            messageDiv.innerHTML = `
+              <div class="text-center">
+                <div class="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i class="fas fa-check text-white text-3xl"></i>
+                </div>
+                <h3 class="font-bold text-3xl text-green-800 mb-3">Paiement réussi !</h3>
+                <p class="text-lg text-gray-700 mb-2">Votre paiement a été confirmé avec succès.</p>
+                <p class="text-sm text-gray-600">Rechargement de la page...</p>
+              </div>
+            `;
+            
+            setTimeout(() => location.reload(), 2000);
+          } else if (result.status === 'failed') {
+            clearInterval(checkInterval);
+            
+            const messageDiv = document.getElementById('paymentMessage');
+            messageDiv.className = 'mt-8 p-6 rounded-2xl bg-red-50 border-2 border-red-200 fade-in';
+            messageDiv.innerHTML = `
+              <div class="text-center">
+                <i class="fas fa-times-circle text-5xl text-red-600 mb-4"></i>
+                <h3 class="font-bold text-2xl text-red-800 mb-3">Paiement échoué</h3>
+                <p class="text-gray-700">Le paiement n'a pas pu être complété. Veuillez réessayer.</p>
+              </div>
+            `;
+          }
+        } catch (error) {
+          console.error('Erreur vérification statut:', error);
+        }
+      }, 3000);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Global Bush - Tableau de bord</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-20px); }
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    .float-animation { animation: float 6s ease-in-out infinite; }
+    .fade-in-up { animation: fadeInUp 0.6s ease-out; }
+    .slide-in { animation: slideIn 0.4s ease-out; }
+    .bg-pattern {
+      background-image: 
+        radial-gradient(circle at 20% 50%, rgba(16, 185, 129, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 50%);
+    }
+    .card-hover { transition: all 0.3s ease; }
+    .card-hover:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .tab-button.active {
+      background: linear-gradient(to right, #10b981, #3b82f6);
+      color: white;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-green-50 min-h-screen bg-pattern">
+  <!-- Header -->
+  <div class="bg-white shadow-md sticky top-0 z-50 border-b-4 border-green-500">
+    <div class="container mx-auto px-4 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center float-animation">
+            <i class="fas fa-globe-africa text-white text-xl"></i>
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
+              Global Bush
+            </h1>
+            <p class="text-xs text-gray-500">Voyagez sans frontières</p>
+          </div>
+        </div>
+        <div class="hidden md:flex items-center space-x-4 text-sm">
+          <a href="#" class="text-gray-600 hover:text-green-600 transition"><i class="fas fa-plane mr-1"></i>Voyages</a>
+          <a href="#" class="text-gray-600 hover:text-green-600 transition"><i class="fas fa-hotel mr-1"></i>Hôtels</a>
+          <a href="#" class="text-gray-600 hover:text-green-600 transition"><i class="fas fa-headset mr-1"></i>Support</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container mx-auto px-4 py-8 max-w-7xl">
+    <!-- Hero Section -->
+    <div class="text-center mb-8 fade-in-up">
+      <div class="inline-block mb-4">
+        <div class="w-20 h-20 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mx-auto shadow-lg float-animation">
+          <i class="fas fa-money-check-alt text-white text-3xl"></i>
+        </div>
+      </div>
+      <h2 class="text-4xl md:text-5xl font-bold mb-3 bg-gradient-to-r from-green-600 via-blue-600 to-purple-600 bg-clip-text text-transparent">
+        Tableau de bord des paiements
+      </h2>
+      <p class="text-gray-600 text-lg">Gérez vos liens de paiement et suivez vos transactions</p>
+    </div>
+
+    <!-- Tabs Navigation -->
+    <div class="bg-white rounded-2xl shadow-lg p-2 mb-6 flex flex-wrap gap-2">
+      <button onclick="switchTab('create')" class="tab-button active flex-1 md:flex-none px-6 py-3 rounded-xl font-semibold transition-all">
+        <i class="fas fa-plus-circle mr-2"></i>Créer un lien
+      </button>
+      <button onclick="switchTab('history')" class="tab-button flex-1 md:flex-none px-6 py-3 rounded-xl font-semibold text-gray-600 hover:bg-gray-100 transition-all">
+        <i class="fas fa-history mr-2"></i>Historique
+      </button>
+      <button onclick="switchTab('stats')" class="tab-button flex-1 md:flex-none px-6 py-3 rounded-xl font-semibold text-gray-600 hover:bg-gray-100 transition-all">
+        <i class="fas fa-chart-bar mr-2"></i>Statistiques
+      </button>
+      <button onclick="switchTab('search')" class="tab-button flex-1 md:flex-none px-6 py-3 rounded-xl font-semibold text-gray-600 hover:bg-gray-100 transition-all">
+        <i class="fas fa-search mr-2"></i>Recherche
+      </button>
+    </div>
+
+    <!-- Tab: Create Payment Link -->
+    <div id="tab-create" class="tab-content active">
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white rounded-xl p-4 shadow-md card-hover border-l-4 border-green-500">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-xs text-gray-500 uppercase">Total liens</p>
+              <p class="text-2xl font-bold text-gray-800" id="totalLinks">0</p>
+            </div>
+            <i class="fas fa-link text-3xl text-green-500"></i>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl p-4 shadow-md card-hover border-l-4 border-blue-500">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-xs text-gray-500 uppercase">Payés</p>
+              <p class="text-2xl font-bold text-gray-800" id="paidLinks">0</p>
+            </div>
+            <i class="fas fa-check-circle text-3xl text-blue-500"></i>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl p-4 shadow-md card-hover border-l-4 border-yellow-500">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-xs text-gray-500 uppercase">En attente</p>
+              <p class="text-2xl font-bold text-gray-800" id="pendingLinks">0</p>
+            </div>
+            <i class="fas fa-clock text-3xl text-yellow-500"></i>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl p-4 shadow-md card-hover border-l-4 border-purple-500">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-xs text-gray-500 uppercase">Total XAF</p>
+              <p class="text-2xl font-bold text-gray-800" id="totalAmount">0</p>
+            </div>
+            <i class="fas fa-coins text-3xl text-purple-500"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form -->
+      <div class="bg-white rounded-3xl shadow-2xl p-8 md:p-10 card-hover fade-in-up border-t-4 border-green-500">
+        <div class="mb-8">
+          <h3 class="text-2xl font-bold text-gray-800 mb-2 flex items-center">
+            <i class="fas fa-file-invoice text-green-600 mr-3"></i>
+            Informations de facturation
+          </h3>
+          <p class="text-gray-500 text-sm">Remplissez les informations du client</p>
+        </div>
+
+        <form id="paymentForm" class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="group">
+              <label class="block text-sm font-semibold text-gray-700 mb-2">
+                <i class="fas fa-user-circle text-green-600 mr-2"></i>Prénom *
+              </label>
+              <input type="text" id="firstName" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all" placeholder="Jean">
+            </div>
+            <div class="group">
+              <label class="block text-sm font-semibold text-gray-700 mb-2">
+                <i class="fas fa-user-circle text-green-600 mr-2"></i>Nom *
+              </label>
+              <input type="text" id="lastName" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all" placeholder="Dupont">
+            </div>
+          </div>
+
+          <div class="group">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+              <i class="fas fa-phone-alt text-blue-600 mr-2"></i>Numéro de téléphone *
+            </label>
+            <input type="tel" id="phone" required pattern="237[0-9]{9}" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" placeholder="237XXXXXXXXX">
+            <p class="text-xs text-gray-500 mt-2"><i class="fas fa-info-circle mr-2"></i>Format: 237XXXXXXXXX</p>
+          </div>
+
+          <div class="group">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+              <i class="fas fa-envelope text-purple-600 mr-2"></i>Email (optionnel)
+            </label>
+            <input type="email" id="email" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all" placeholder="jean.dupont@email.com">
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="group">
+              <label class="block text-sm font-semibold text-gray-700 mb-2">
+                <i class="fas fa-coins text-yellow-600 mr-2"></i>Montant (XAF) *
+              </label>
+              <input type="number" id="amount" required min="100" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all" placeholder="50000">
+            </div>
+            <div class="group">
+              <label class="block text-sm font-semibold text-gray-700 mb-2">
+                <i class="fas fa-tag text-indigo-600 mr-2"></i>Type de service *
+              </label>
+              <select id="serviceType" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                <option value="">Choisir...</option>
+                <option value="vol">✈️ Billet d'avion</option>
+                <option value="hotel">🏨 Réservation hôtel</option>
+                <option value="package">🎒 Package voyage</option>
+                <option value="visa">📝 Assistance visa</option>
+                <option value="transport">🚗 Transport terrestre</option>
+                <option value="autre">🔧 Autre service</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="group">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+              <i class="fas fa-hashtag text-pink-600 mr-2"></i>Référence
+            </label>
+            <input type="text" id="reference" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all" placeholder="GB-2024-0001">
+          </div>
+
+          <div class="group">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+              <i class="fas fa-align-left text-teal-600 mr-2"></i>Description *
+            </label>
+            <textarea id="reason" required rows="4" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all resize-none" placeholder="Décrivez le service..."></textarea>
+          </div>
+
+          <button type="submit" id="submitBtn" class="w-full bg-gradient-to-r from-green-500 via-blue-600 to-purple-600 text-white font-bold py-4 rounded-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-3 text-lg">
+            <i class="fas fa-paper-plane"></i>
+            <span>Générer le lien</span>
+            <i class="fas fa-arrow-right"></i>
+          </button>
+        </form>
+
+        <div id="result" class="hidden mt-8 p-6 bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-200 rounded-2xl fade-in-up">
+          <div class="flex items-start space-x-4 mb-4">
+            <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+              <i class="fas fa-check text-white text-xl"></i>
+            </div>
+            <div class="flex-1">
+              <h3 class="text-xl font-bold text-green-800 mb-1">Lien généré !</h3>
+              <p class="text-sm text-gray-600">Partagez ce lien avec votre client</p>
+            </div>
+          </div>
+          
+          <div class="bg-white p-4 rounded-xl mb-4 border-2 border-green-100">
+            <p class="text-xs text-gray-500 mb-2"><i class="fas fa-link mr-2"></i>Lien de paiement</p>
+            <div class="flex items-center gap-2">
+              <input type="text" id="paymentLink" readonly class="flex-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm font-mono">
+              <button onclick="copyLink()" class="px-4 py-2 bg-gradient-to-r from-green-500 to-blue-600 text-white rounded-lg hover:shadow-lg transition-all">
+                <i class="fas fa-copy"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <a id="viewInvoice" target="_blank" class="block text-center bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold py-3 rounded-xl hover:shadow-xl transition-all">
+              <i class="fas fa-file-invoice mr-2"></i>Voir la facture
+            </a>
+            <button onclick="shareLink()" class="block text-center bg-gradient-to-r from-green-600 to-teal-600 text-white font-bold py-3 rounded-xl hover:shadow-xl transition-all">
+              <i class="fas fa-share-alt mr-2"></i>Partager
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: History -->
+    <div id="tab-history" class="tab-content">
+      <div class="bg-white rounded-3xl shadow-2xl p-8">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-2xl font-bold text-gray-800">
+            <i class="fas fa-history text-blue-600 mr-3"></i>Historique des paiements
+          </h3>
+          <button onclick="loadHistory()" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
+            <i class="fas fa-sync-alt mr-2"></i>Actualiser
+          </button>
+        </div>
+
+        <div class="mb-4 flex flex-wrap gap-2">
+          <button onclick="filterHistory('all')" class="filter-btn active px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition">
+            Tous
+          </button>
+          <button onclick="filterHistory('completed')" class="filter-btn px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition">
+            <i class="fas fa-check-circle text-green-600 mr-1"></i>Payés
+          </button>
+          <button onclick="filterHistory('pending')" class="filter-btn px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition">
+            <i class="fas fa-clock text-yellow-600 mr-1"></i>En attente
+          </button>
+          <button onclick="filterHistory('failed')" class="filter-btn px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 transition">
+            <i class="fas fa-times-circle text-red-600 mr-1"></i>Échoués
+          </button>
+        </div>
+
+        <div id="historyList" class="space-y-4"></div>
+      </div>
+    </div>
+
+    <!-- Tab: Stats -->
+    <div id="tab-stats" class="tab-content">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+          <h3 class="text-xl font-bold mb-4"><i class="fas fa-chart-pie text-purple-600 mr-2"></i>Répartition par statut</h3>
+          <div id="statsChart" class="space-y-4"></div>
+        </div>
+        
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+          <h3 class="text-xl font-bold mb-4"><i class="fas fa-chart-line text-green-600 mr-2"></i>Services populaires</h3>
+          <div id="servicesChart" class="space-y-4"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Search -->
+    <div id="tab-search" class="tab-content">
+      <div class="bg-white rounded-3xl shadow-2xl p-8">
+        <h3 class="text-2xl font-bold text-gray-800 mb-6">
+          <i class="fas fa-search text-indigo-600 mr-3"></i>Rechercher un paiement
+        </h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <input type="text" id="searchRef" placeholder="Référence..." class="px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500">
+          <input type="text" id="searchPhone" placeholder="Téléphone..." class="px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500">
+          <button onclick="searchPayment()" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-3 rounded-xl hover:shadow-lg transition">
+            <i class="fas fa-search mr-2"></i>Rechercher
+          </button>
+        </div>
+
+        <div id="searchResults" class="mt-6"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let allPayments = [];
+    let currentFilter = 'all';
+
+    // Charger les stats au démarrage
+    loadStats();
+    loadHistory();
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-button').forEach(el => el.classList.remove('active'));
+      
+      document.getElementById(`tab-${tab}`).classList.add('active');
+      event.target.classList.add('active');
+
+      if (tab === 'history') loadHistory();
+      if (tab === 'stats') loadStatistics();
+    }
+
+    async function loadStats() {
+      try {
+        const response = await fetch('/api/all-payments');
+        const payments = await response.json();
+        allPayments = payments;
+
+        const total = payments.length;
+        const paid = payments.filter(p => p.status === 'completed').length;
+        const pending = payments.filter(p => p.status === 'pending').length;
+        const totalAmount = payments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
+
+        document.getElementById('totalLinks').textContent = total;
+        document.getElementById('paidLinks').textContent = paid;
+        document.getElementById('pendingLinks').textContent = pending;
+        document.getElementById('totalAmount').textContent = totalAmount.toLocaleString('fr-FR');
+      } catch (error) {
+        console.error('Erreur chargement stats:', error);
+      }
+    }
+
+    async function loadHistory() {
+      try {
+        const response = await fetch('/api/all-payments');
+        const payments = await response.json();
+        allPayments = payments;
+        displayHistory(payments);
+      } catch (error) {
+        console.error('Erreur chargement historique:', error);
+      }
+    }
+
+    function filterHistory(status) {
+      currentFilter = status;
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active', 'bg-blue-500', 'text-white'));
+      event.target.classList.add('active', 'bg-blue-500', 'text-white');
+
+      const filtered = status === 'all' ? allPayments : allPayments.filter(p => p.status === status);
+      displayHistory(filtered);
+    }
+
+    function displayHistory(payments) {
+      const container = document.getElementById('historyList');
+      
+      if (payments.length === 0) {
+        container.innerHTML = '<div class="text-center py-12 text-gray-500"><i class="fas fa-inbox text-5xl mb-4"></i><p>Aucun paiement trouvé</p></div>';
+        return;
+      }
+
+      container.innerHTML = payments.map(p => {
+        const statusColors = {
+          completed: 'bg-green-100 text-green-800 border-green-300',
+          pending: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+          failed: 'bg-red-100 text-red-800 border-red-300'
+        };
+        const statusIcons = {
+          completed: 'fa-check-circle',
+          pending: 'fa-clock',
+          failed: 'fa-times-circle'
+        };
+        const statusLabels = {
+          completed: 'Payé',
+          pending: 'En attente',
+          failed: 'Échoué'
+        };
+
+        return `
+          <div class="border-2 ${statusColors[p.status]} rounded-xl p-4 hover:shadow-lg transition slide-in">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div class="flex-1">
+                <div class="flex items-center gap-3 mb-2">
+                  <span class="px-3 py-1 ${statusColors[p.status]} rounded-full text-xs font-semibold">
+                    <i class="fas ${statusIcons[p.status]} mr-1"></i>${statusLabels[p.status]}
+                  </span>
+                  <span class="text-sm text-gray-500">${new Date(p.created_at).toLocaleDateString('fr-FR')}</span>
+                </div>
+                <p class="font-bold text-lg text-gray-800">${p.first_name} ${p.last_name}</p>
+                <p class="text-sm text-gray-600"><i class="fas fa-phone mr-2"></i>${p.phone}</p>
+                <p class="text-sm text-gray-600"><i class="fas fa-tag mr-2"></i>${p.reference || 'N/A'}</p>
+                ${p.paid_at ? `<p class="text-xs text-green-600 mt-1"><i class="fas fa-calendar-check mr-1"></i>Payé le ${new Date(p.paid_at).toLocaleString('fr-FR')}</p>` : ''}
+              </div>
+              <div class="text-right">
+                <p class="text-2xl font-bold text-gray-800">${parseFloat(p.amount).toLocaleString('fr-FR')} XAF</p>
+                <div class="flex gap-2 mt-3">
+                  <a href="/invoice/${p.payment_id}" target="_blank" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition text-sm">
+                    <i class="fas fa-eye mr-1"></i>Voir
+                  </a>
+                  <button onclick="copyPaymentLink('${p.payment_id}')" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-sm">
+                    <i class="fas fa-copy mr-1"></i>Copier
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function loadStatistics() {
+      const statusCounts = {
+        completed: allPayments.filter(p => p.status === 'completed').length,
+        pending: allPayments.filter(p => p.status === 'pending').length,
+        failed: allPayments.filter(p => p.status === 'failed').length
+      };
+
+      const total = allPayments.length || 1;
+      document.getElementById('statsChart').innerHTML = `
+        <div class="space-y-3">
+          <div>
+            <div class="flex justify-between mb-1">
+              <span class="text-sm font-semibold text-green-700">Payés</span>
+              <span class="text-sm font-bold">${statusCounts.completed} (${((statusCounts.completed/total)*100).toFixed(1)}%)</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-3">
+              <div class="bg-green-500 h-3 rounded-full" style="width: ${(statusCounts.completed/total)*100}%"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between mb-1">
+              <span class="text-sm font-semibold text-yellow-700">En attente</span>
+              <span class="text-sm font-bold">${statusCounts.pending} (${((statusCounts.pending/total)*100).toFixed(1)}%)</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-3">
+              <div class="bg-yellow-500 h-3 rounded-full" style="width: ${(statusCounts.pending/total)*100}%"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between mb-1">
+              <span class="text-sm font-semibold text-red-700">Échoués</span>
+              <span class="text-sm font-bold">${statusCounts.failed} (${((statusCounts.failed/total)*100).toFixed(1)}%)</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-3">
+              <div class="bg-red-500 h-3 rounded-full" style="width: ${(statusCounts.failed/total)*100}%"></div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function searchPayment() {
+      const ref = document.getElementById('searchRef').value.toLowerCase();
+      const phone = document.getElementById('searchPhone').value;
+
+      const results = allPayments.filter(p => 
+        (ref === '' || (p.reference && p.reference.toLowerCase().includes(ref))) &&
+        (phone === '' || p.phone.includes(phone))
+      );
+
+      const container = document.getElementById('searchResults');
+      if (results.length === 0) {
+        container.innerHTML = '<div class="text-center py-8 text-gray-500"><i class="fas fa-search text-4xl mb-3"></i><p>Aucun résultat trouvé</p></div>';
+      } else {
+        displayHistory(results);
+        container.innerHTML = `<p class="text-green-600 font-semibold mb-4"><i class="fas fa-check-circle mr-2"></i>${results.length} résultat(s) trouvé(s)</p>`;
+        displayHistory(results);
+      }
+    }
+
+    function copyPaymentLink(paymentId) {
+      const link = `${window.location.origin}/invoice/${paymentId}`;
+      navigator.clipboard.writeText(link);
+      alert('Lien copié !');
+    }
+
+    // Formulaire de création
+    document.getElementById('paymentForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Génération...';
+
+      const serviceType = document.getElementById('serviceType').value;
+      const serviceLabels = {
+        'vol': "Billet d'avion",
+        'hotel': 'Réservation hôtel',
+        'package': 'Package voyage',
+        'visa': 'Assistance visa',
+        'transport': 'Transport terrestre',
+        'autre': 'Autre service'
+      };
+
+      const data = {
+        firstName: document.getElementById('firstName').value,
+        lastName: document.getElementById('lastName').value,
+        phone: document.getElementById('phone').value,
+        email: document.getElementById('email').value,
+        amount: parseFloat(document.getElementById('amount').value),
+        reference: document.getElementById('reference').value || `GB-${Date.now()}`,
+        reason: `${serviceLabels[serviceType] || 'Service'}: ${document.getElementById('reason').value}`,
+        serviceType: serviceType
+      };
+
+      try {
+        const response = await fetch('/api/create-payment-link', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          document.getElementById('paymentLink').value = result.paymentLink;
+          document.getElementById('viewInvoice').href = result.paymentLink;
+          document.getElementById('result').classList.remove('hidden');
+          document.getElementById('paymentForm').reset();
+          loadStats();
+        } else {
+          alert('Erreur: ' + (result.error || 'Erreur inconnue'));
+        }
+      } catch (error) {
+        alert('Erreur de connexion');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i><span>Générer le lien</span><i class="fas fa-arrow-right ml-2"></i>';
+      }
+    });
+
+    function copyLink() {
+      const linkInput = document.getElementById('paymentLink');
+      linkInput.select();
+      navigator.clipboard.writeText(linkInput.value);
+      alert('Lien copié dans le presse-papier !');
+    }
+
+    function shareLink() {
+      const link = document.getElementById('paymentLink').value;
+      if (navigator.share) {
+        navigator.share({
+          title: 'Lien de paiement Global Bush',
+          text: 'Voici votre lien de paiement',
+          url: link
+        });
+      } else {
+        copyLink();
+      }
+    }
+  </script>
+</body>
+</html>
