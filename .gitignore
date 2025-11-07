@@ -22,3 +22,5 @@ build/
 # Coverage and tests
 coverage/
 *.test.js
+
+#git remote add origin https://github.com/stephanezoa/link-pay-mtn.git
